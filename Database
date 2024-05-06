@@ -1,0 +1,31 @@
+CREATE TABLE IF NOT EXISTS users (
+    userID SERIAL PRIMARY KEY,
+    username VARCHAR(300) NOT NULL,
+    state VARCHAR(300) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS words (
+    wordsID SERIAL PRIMARY KEY,
+    russian_word VARCHAR(300) NOT NULL,
+    target_word VARCHAR(300) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS userwords (
+    userwordsID SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    word_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(userID),
+    FOREIGN KEY (word_id) REFERENCES words(wordsID)
+    );
+    
+
+INSERT INTO words (russian_word, target_word) VALUES ('Программист', 'Programmer');
+INSERT INTO words (russian_word, target_word) VALUES ('Атрибуты', 'Attributes');
+INSERT INTO words (russian_word, target_word) VALUES ('Переменная', 'Variable');
+INSERT INTO words (russian_word, target_word) VALUES ('Авторизация', 'Authorization');
+INSERT INTO words (russian_word, target_word) VALUES ('Аутентификация', 'Authentication');
+INSERT INTO words (russian_word, target_word) VALUES ('Библиотека', 'library');
+INSERT INTO words (russian_word, target_word) VALUES ('Компилятор', 'Compiler');
+INSERT INTO words (russian_word, target_word) VALUES ('Репозиторий', 'Repository');
+INSERT INTO words (russian_word, target_word) VALUES ('Отладка', 'Debugging');
+INSERT INTO words (russian_word, target_word) VALUES ('Продукт', 'Product');
