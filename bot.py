@@ -3,7 +3,7 @@ import random
 from telebot import types
 from telebot.handler_backends import State, StatesGroup
 from telebot.types import ReplyKeyboardRemove
-
+import sqlite3
 
 TOKEN = '6769353980:AAGZO-LkvHacmJGzPtY9ySUeA7e7VnhwUc4'
 bot = telebot.TeleBot(TOKEN)
@@ -12,6 +12,55 @@ class Command:
     ADD_WORD = 'Добавить слово ➕'
     DELETE_WORD = 'Удалить слово🔙'
     NEXT = 'Дальше ⏭'
+
+def init_db():
+    conn = sqlite3.connect('english_bot.db')
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS words 
+                      (id INTEGER PRIMARY KEY, 
+                      english TEXT UNIQUE, 
+                      translation TEXT)''')
+    conn.commit()
+    conn.close()
+
+def add_word(english, translation):
+    conn = sqlite3.connect('english_bot.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT OR IGNORE INTO words (english, translation) VALUES (?,?)', (english, translation))
+    conn.commit()
+    conn.close()
+
+def get_word(english):
+    conn = sqlite3.connect('english_bot.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT translation FROM words WHERE english=?', (english,))
+    result = cursor.fetchone()
+    conn.close()
+    if result:
+        return result[0]
+    else:
+        return None
+@bot.message_handler(commands=['add'])
+def add_word_message(message):
+    msg = bot.send_message(message.chat.id, 'Введите слово на английском и его перевод через запятую (например, apple, яблоко)')
+    bot.register_next_step_handler(msg, process_add_word)
+
+def process_add_word(message):
+    try:
+        english, translation = message.text.split(',')
+        add_word(english.strip(), translation.strip())
+        bot.send_message(message.chat.id, f'Слово "{english}" добавлено в базу с переводом "{translation}".')
+    except Exception as e:
+        bot.send_message(message.chat.id, 'Произошла ошибка. Убедитесь, что вы ввели данные в правильном формате: слово на английском и его перевод через запятую (например, apple, яблоко).')
+
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    translation = get_word(message.text.strip().lower())
+    if translation:
+        bot.reply_to(message, f'Перевод: {translation}')
+    else:
+        bot.reply_to(message, 'Извините, я не нашел перевод для этого слова. Можете добавить его с помощью команды /add.')
+
 
 class MyStates(StatesGroup):
     target_word = State()
@@ -133,4 +182,6 @@ def delete_word(message):
 
 if __name__ == '__main__':
     print('Bot is running!')
+    init_db()
+
     bot.infinity_polling()
